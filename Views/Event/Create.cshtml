@@ -1,0 +1,68 @@
+﻿@model EventManagement.Models.Event
+@using System.Security.Claims
+<h1 class="mb-4">Create Event</h1>
+
+<!-- Komunikaty o sukcesie i błędzie -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-3">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Błędy walidacji -->
+@foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+{
+    <div class="alert alert-danger">@error.ErrorMessage</div>
+}
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="mt-4">
+    <!-- Ukryte pole dla OrganizerId -->
+    <input type="hidden" asp-for="OrganizerId" value="@User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)" />
+
+    <!-- Pole na nazwę -->
+    <div class="form-group mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" placeholder="Enter event name" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <!-- Pole na opis -->
+    <div class="form-group mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" placeholder="Enter event description"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <!-- Pole na datę -->
+    <div class="form-group mb-3">
+        <label asp-for="Date" class="form-label"></label>
+        <input asp-for="Date" class="form-control" type="datetime-local" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <!-- Pole na lokalizację -->
+    <div class="form-group mb-3">
+        <label asp-for="Location" class="form-label"></label>
+        <input asp-for="Location" class="form-control" placeholder="Enter event location" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+
+    <!-- Pole na obrazek -->
+    <div class="form-group mb-3">
+        <label for="imageUrl" class="form-label">Event Image (optional)</label>
+        <input type="file" class="form-control" name="imageUrl" id="imageUrl" />
+        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+    </div>
+
+
+    <!-- Przycisk submit -->
+    <button type="submit" class="btn btn-primary btn-lg">Create Event</button>
+</form>

@@ -1,0 +1,102 @@
+﻿@model IEnumerable<EventManagement.Models.Event>
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Event List";
+}
+
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
+<div class="container">
+    <div class="row">
+        <!-- Komunikaty o sukcesie i błędzie -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success mt-3">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger mt-3">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <!-- Przycisk do utworzenia nowego wydarzenia -->
+        <div class="col-12 mb-3">
+            <a href="@Url.Action("Create", "Event")" class="btn btn-primary btn-lg">Create Event</a>
+        </div>
+
+        <!-- Wyświetlanie wydarzeń -->
+        @foreach (var eventItem in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <!-- Dynamiczne źródło obrazka -->
+                    @if (!string.IsNullOrEmpty(eventItem.ImageUrl))
+                    {
+                        <img src="@Url.Content(eventItem.ImageUrl)" class="card-img-top" alt="Event image">
+                    }
+                    else
+                    {
+                        <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Placeholder image">
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@eventItem.Name</h5>
+                        <p class="card-text">@eventItem.Description</p>
+                        <p><strong>Organizer:</strong> @eventItem.Organizer.UserName</p>
+                        <p><strong>Date:</strong> @eventItem.Date.ToShortDateString()</p>
+
+                        <!-- Liczba zapisanych uczestników -->
+                        <div class="alert alert-secondary">
+                            <strong>Signups Count: @eventItem.EventSignups?.Count()</strong><br />
+                        </div>
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                            // Jeśli User ID i Organizer ID są różne, pokazujemy przycisk zapisu
+                            if (userId != eventItem.OrganizerId)
+                            {
+                                var isRegistered = eventItem.EventSignups.Any(es => es.UserId == userId);
+
+                                if (isRegistered)
+                                {
+                                    <form method="post" asp-action="CancelSignup" asp-route-eventId="@eventItem.Id">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Signup</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Signup" asp-route-eventId="@eventItem.Id">
+                                        <button type="submit" class="btn btn-primary btn-sm">Sign Up</button>
+                                    </form>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <!-- Jeśli użytkownik nie jest zalogowany, przekierowujemy do logowania -->
+                            <a href="https://localhost:7009/Identity/Account/Login" class="btn btn-info btn-sm">Login to sign up</a>
+                        }
+
+                        @if (User.Identity.IsAuthenticated && User.FindFirstValue(ClaimTypes.NameIdentifier) == eventItem.OrganizerId)
+                        {
+                            <!-- Link do listy uczestników -->
+                            <a href="@Url.Action("Participants", "Event", new { eventId = eventItem.Id })" class="btn btn-info btn-sm">View Participants</a>
+
+                            <!-- Przyciski dla organizatora -->
+                            <a href="@Url.Action("Edit", "Event", new { id = eventItem.Id })" class="btn btn-warning btn-sm">Edit</a>
+                            <form method="post" asp-action="Delete" asp-route-id="@eventItem.Id" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
